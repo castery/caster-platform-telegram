@@ -15,6 +15,8 @@ export const PLATFORM = 'telegram';
  * @type {Object}
  */
 export const defaultOptions = {
+	id: null,
+
 	adapter: {}
 };
 
@@ -26,5 +28,7 @@ export const defaultOptions = {
  * @extends {defaultOptions}
  */
 export const defaultOptionsSchema = Joi.object().keys({
+	id: Joi.number().allow(null),
+
 	adapter: Joi.object()
 });

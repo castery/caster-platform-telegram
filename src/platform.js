@@ -26,14 +26,18 @@ export class TelegramPlatform extends Platform {
 	constructor (options = {}) {
 		super();
 
+		Object.assign(this.options, defaultOptions);
+
 		this.telegraf = new Telegraf;
 		this.telegram = this.telegraf.telegram;
 
-		this._casters = new WeakSet;
+		this._casters = new Set;
 
 		if (Object.keys(options).length > 0) {
 			this.setOptions(options);
 		}
+
+		this._addDefaultEvents();
 	}
 
 	/**
@@ -64,13 +68,19 @@ export class TelegramPlatform extends Platform {
 	 * @inheritdoc
 	 */
 	getOptionsSchema () {
-		return super.getOptionsSchema();
+		return defaultOptionsSchema;
 	}
 
 	/**
 	 * @inheritdoc
 	 */
 	async start () {
+		if (this.options.id === null) {
+			const { id } = await this.telegram.getMe();
+
+			this.setOptions({ id });
+		}
+
 		await this.telegraf.startPolling();
 	}
 
@@ -85,30 +95,14 @@ export class TelegramPlatform extends Platform {
 	 * @inheritdoc
 	 */
 	subscribe (caster) {
-		if (this._casters.has(caster)) {
-			return;
-		}
-
 		this._casters.add(caster);
-
-		this.telegraf.on('text', (context) => {
-			caster.dispatchIncomingMiddleware(
-				new TelegramMessageContext(this, caster, context)
-			);
-		});
 	}
 
 	/**
 	 * @inheritdoc
 	 */
 	unsubscribe (caster) {
-		if (!this._casters.has(caster)) {
-			return;
-		}
-
 		this._casters.delete(caster);
-
-		/* TODO: Add unsubscribe events polling */
 	}
 
 	/**
@@ -120,5 +114,18 @@ export class TelegramPlatform extends Platform {
 	 */
 	send (params) {
 		return this.telegram.callApi('sendMessage', params);
+	}
+
+	/**
+	 * Add default events telegram
+	 */
+	_addDefaultEvents () {
+		this.telegraf.on('message', (context) => {
+			for (const caster of this._casters) {
+				caster.dispatchIncomingMiddleware(
+					new TelegramMessageContext(this, caster, context)
+				);
+			}
+		});
 	}
 }
