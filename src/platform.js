@@ -74,6 +74,31 @@ export class TelegramPlatform extends Platform {
 	/**
 	 * @inheritdoc
 	 */
+	getAdapter () {
+		return this.telegram;
+	}
+
+	/**
+	 * Returns the platform id
+	 *
+	 * @return {string}
+	 */
+	getId () {
+		return this.options.id;
+	}
+
+	/**
+	 * Returns the platform name
+	 *
+	 * @return {string}
+	 */
+	getPlatformName () {
+		return PLATFORM;
+	}
+
+	/**
+	 * @inheritdoc
+	 */
 	async start () {
 		if (this.options.id === null) {
 			const { id } = await this.telegram.getMe();
@@ -94,26 +119,44 @@ export class TelegramPlatform extends Platform {
 	/**
 	 * @inheritdoc
 	 */
-	subscribe (caster) {
+	async subscribe (caster) {
 		this._casters.add(caster);
+
+		if (!this.isStarted()) {
+			await this.start();
+		}
+
+		caster.outcoming.use({
+			name: `outcoming-telegram-${this.options.id}`,
+
+			handler: async (context, next) => {
+				if (context.getPlatformName() !== PLATFORM) {
+					return await next();
+				}
+
+				if (context.getPlatformId() !== this.options.id) {
+					return await next();
+				}
+
+				return await this.telegram.callApi('sendMessage', {
+					chat_id: context.from.id,
+					text: context.text
+				});
+			}
+		});
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	unsubscribe (caster) {
+	async unsubscribe (caster) {
 		this._casters.delete(caster);
-	}
 
-	/**
-	 * Sends a message
-	 *
-	 * @param {Object} params
-	 *
-	 * @return {Promise<mixed>}
-	 */
-	send (params) {
-		return this.telegram.callApi('sendMessage', params);
+		/* TODO: Add delete outcoming middleware */
+
+		if (this._casters.size === 0 && this.isStarted()) {
+			await this.stop();
+		}
 	}
 
 	/**
@@ -122,8 +165,8 @@ export class TelegramPlatform extends Platform {
 	_addDefaultEvents () {
 		this.telegraf.on('message', (context) => {
 			for (const caster of this._casters) {
-				caster.dispatchIncomingMiddleware(
-					new TelegramMessageContext(this, caster, context)
+				caster.dispatchIncoming(
+					new TelegramMessageContext(caster, context, this.options.id)
 				);
 			}
 		});

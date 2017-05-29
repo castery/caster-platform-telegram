@@ -6,7 +6,7 @@ import { PLATFORM } from '../util/constants';
 import { MessageContext } from '../../../caster';
 
 const enumTypesMessage = {
-	private: 'dialog',
+	private: 'dm',
 };
 
 /**
@@ -18,16 +18,15 @@ export class TelegramMessageContext extends MessageContext {
 	/**
 	 * Constructor
 	 *
-	 * @param {TelegramPlatform} platform
-	 * @param {Caster}           caster
-	 * @param {Context}          context
-	 * @param {string}           type
+	 * @param {Caster}  caster
+	 * @param {Context} context
+	 * @param {number}  id
 	 */
-	constructor (platform, caster, context) {
+	constructor (caster, context, id) {
 		super(caster);
 
 		this.platform = {
-			id: platform.options.id,
+			id,
 			name: PLATFORM
 		};
 
@@ -48,8 +47,6 @@ export class TelegramMessageContext extends MessageContext {
 		this.text = context.message.text;
 
 		this.raw = context;
-
-		this._platform = platform;
 	}
 
 	/**
@@ -67,9 +64,12 @@ export class TelegramMessageContext extends MessageContext {
 			options.text = text;
 		}
 
-		options.chat_id = this.from.id;
+		const message = new TelegramMessageContext(this.caster, this.raw, this.platform.id);
 
-		return this._platform.send(options);
+		message.to = this.from;
+		message.text = options.text;
+
+		return this.caster.dispatchOutcoming(message);
 	}
 
 	/**

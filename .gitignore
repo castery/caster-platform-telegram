@@ -38,6 +38,3 @@ jspm_packages
 
 # Build
 lib
-
-# TODO: Delete, that
-app.js
