@@ -1,6 +1,6 @@
 'use strict';
 
-import { PLATFORM } from '../util/constants';
+import { PLATFORM_NAME } from '../util/constants';
 
 /* TODO: Change from local package to npm */
 import { MessageContext } from '../../../caster';
@@ -27,7 +27,7 @@ export class TelegramMessageContext extends MessageContext {
 
 		this.platform = {
 			id,
-			name: PLATFORM
+			name: PLATFORM_NAME
 		};
 
 		const { type } = context.chat;

@@ -7,7 +7,7 @@ import Joi from 'joi';
  *
  * @type {string}
  */
-export const PLATFORM = 'telegram';
+export const PLATFORM_NAME = 'telegram';
 
 /**
  * Default options platform

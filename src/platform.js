@@ -10,7 +10,7 @@ import createDebug from 'debug';
 import { TelegramMessageContext } from './contexts/message';
 
 import {
-	PLATFORM,
+	PLATFORM_NAME,
 	defaultOptions,
 	defaultOptionsSchema
 } from './util/constants';
@@ -93,7 +93,7 @@ export class TelegramPlatform extends Platform {
 	 * @return {string}
 	 */
 	getPlatformName () {
-		return PLATFORM;
+		return PLATFORM_NAME;
 	}
 
 	/**
@@ -126,23 +126,19 @@ export class TelegramPlatform extends Platform {
 			await this.start();
 		}
 
-		caster.outcoming.use({
-			name: `outcoming-telegram-${this.options.id}`,
-
-			handler: async (context, next) => {
-				if (context.getPlatformName() !== PLATFORM) {
-					return await next();
-				}
-
-				if (context.getPlatformId() !== this.options.id) {
-					return await next();
-				}
-
-				return await this.telegram.callApi('sendMessage', {
-					chat_id: context.from.id,
-					text: context.text
-				});
+		caster.outcoming.addPlatform(this, async (context, next) => {
+			if (context.getPlatformName() !== PLATFORM_NAME) {
+				return await next();
 			}
+
+			if (context.getPlatformId() !== this.options.id) {
+				return await next();
+			}
+
+			return await this.telegram.callApi('sendMessage', {
+				chat_id: context.from.id,
+				text: context.text
+			});
 		});
 	}
 
@@ -152,7 +148,7 @@ export class TelegramPlatform extends Platform {
 	async unsubscribe (caster) {
 		this._casters.delete(caster);
 
-		/* TODO: Add delete outcoming middleware */
+		caster.outcoming.removePlatform(this);
 
 		if (this._casters.size === 0 && this.isStarted()) {
 			await this.stop();
