@@ -10,6 +10,30 @@ import Joi from 'joi';
 export const PLATFORM_NAME = 'telegram';
 
 /**
+ * Supports attachments
+ *
+ * @type {Array}
+ */
+export const supportAttachments = ['image', 'video', 'document', 'button'];
+
+/**
+ * Media attachments
+ *
+ * @type {Array}
+ */
+export const mediaAttachments = ['image', 'video', 'document'];
+
+/**
+ * Switches type attachments
+ *
+ * @type {Object}
+ */
+export const switchAttachments = {
+	image: 'photo',
+	document: 'doc'
+};
+
+/**
  * Default options platform
  *
  * @type {Object}

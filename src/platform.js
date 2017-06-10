@@ -1,6 +1,6 @@
 'use strict';
 
-import Telegraf from 'telegraf';
+import Telegraf, { Markup } from 'telegraf';
 
 /* TODO: Change from local package to npm */
 import { Platform } from '../../caster';
@@ -12,6 +12,8 @@ import { TelegramMessageContext } from './contexts/message';
 import {
 	PLATFORM_NAME,
 	defaultOptions,
+	mediaAttachments,
+	supportAttachments,
 	defaultOptionsSchema
 } from './util/constants';
 
@@ -135,10 +137,43 @@ export class TelegramPlatform extends Platform {
 				return await next();
 			}
 
-			return await this.telegram.callApi('sendMessage', {
-				chat_id: context.from.id,
+			const chatId = context.from.id;
+
+			const message = {
+				chat_id: chatId,
 				text: context.text
-			});
+			};
+
+			if ('attachments' in context) {
+				const media = context.attachments.filter(({ type }) => (
+					mediaAttachments.includes(type)
+				))
+				.map(({ type, source }) => {
+					if (type === 'image') {
+						return this.telegram.sendPhoto(chatId, source);
+					}
+
+					if (type === 'video') {
+						return this.telegram.sendVideo(chatId, source);
+					}
+
+					if (type === 'audio') {
+						return this.telegram.sendAudio(chatId, source);
+					}
+
+					if (type === 'document') {
+						return this.telegram.sendDocument(chatId, source);
+					}
+				});
+
+				const buttons = context.attachments.filter(({ type }) => (
+					!mediaAttachments.includes(type)
+				));
+
+				return await Promise.all([...media, ...buttons]);
+			}
+
+			return await this.telegram.callApi('sendMessage', message);
 		});
 	}
 
