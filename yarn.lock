@@ -1748,9 +1748,9 @@ tar@^2.2.1:
     fstream "^1.0.2"
     inherits "2"
 
-telegraf@^3.8.0:
-  version "3.8.0"
-  resolved "https://registry.yarnpkg.com/telegraf/-/telegraf-3.8.0.tgz#40fabfdeefc8caab5adb5a3c81a9940c9a4ee138"
+telegraf@^3.9.0:
+  version "3.9.0"
+  resolved "https://registry.yarnpkg.com/telegraf/-/telegraf-3.9.0.tgz#f8e375d603a6a987f93963448e399fa2128a40b7"
   dependencies:
     auto-bind "^1.1.0"
     debug "^2.6.0"

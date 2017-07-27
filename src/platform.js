@@ -1,10 +1,8 @@
 'use strict';
 
-import Telegraf, { Markup } from 'telegraf';
-
-import { Platform } from '@castery/caster';
-
 import createDebug from 'debug';
+import Telegraf, { Markup } from 'telegraf';
+import { Platform, errors as casterErrors } from '@castery/caster';
 
 import { TelegramMessageContext } from './contexts/message';
 
@@ -12,11 +10,14 @@ import {
 	PLATFORM_NAME,
 	defaultOptions,
 	mediaAttachments,
-	supportAttachments,
-	defaultOptionsSchema
+	defaultOptionsSchema,
+	supportedContextTypes,
+	supportedAttachmentTypes
 } from './util/constants';
 
-const debug = createDebug('caster:platform-telegram');
+const { UnsupportedAttachmentType, UnsupportedContextType } = casterErrors;
+
+const debug = createDebug('caster-telegram');
 
 export class TelegramPlatform extends Platform {
 	/**
@@ -136,6 +137,12 @@ export class TelegramPlatform extends Platform {
 				return await next();
 			}
 
+			if (supportedContextTypes[context.type] !== true) {
+				throw new UnsupportedContextType({
+					type: context.type
+				});
+			}
+
 			const chatId = context.from.id;
 
 			const message = {
@@ -144,32 +151,31 @@ export class TelegramPlatform extends Platform {
 			};
 
 			if ('attachments' in context) {
-				const media = context.attachments.filter(({ type }) => (
-					mediaAttachments.includes(type)
-				))
-				.map(({ type, source }) => {
-					if (type === 'image') {
-						return this.telegram.sendPhoto(chatId, source);
+				for (const { type } of context.attachments) {
+					if (supportedAttachmentTypes[type] !== true) {
+						throw new UnsupportedAttachmentType({ type });
 					}
+				}
 
-					if (type === 'video') {
-						return this.telegram.sendVideo(chatId, source);
-					}
+				await Promise.all(
+					context.attachments.map(({ type, source }) => {
+						if (type === 'image') {
+							return this.telegram.sendPhoto(chatId, source);
+						}
 
-					if (type === 'audio') {
-						return this.telegram.sendAudio(chatId, source);
-					}
+						if (type === 'video') {
+							return this.telegram.sendVideo(chatId, source);
+						}
 
-					if (type === 'document') {
-						return this.telegram.sendDocument(chatId, source);
-					}
-				});
+						if (type === 'audio') {
+							return this.telegram.sendAudio(chatId, source);
+						}
 
-				const buttons = context.attachments.filter(({ type }) => (
-					!mediaAttachments.includes(type)
-				));
-
-				return await Promise.all([...media, ...buttons]);
+						if (type === 'document') {
+							return this.telegram.sendDocument(chatId, source);
+						}
+					})
+				);
 			}
 
 			return await this.telegram.callApi('sendMessage', message);

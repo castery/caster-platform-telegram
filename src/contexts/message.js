@@ -1,8 +1,14 @@
 'use strict';
 
-import { PLATFORM_NAME } from '../util/constants';
+import { MessageContext, CONTEXT_PROPS } from '@castery/caster';
 
-import { MessageContext } from '@castery/caster';
+import {
+	PLATFORM_NAME,
+	supportedContextTypes,
+	supportedAttachmentTypes
+} from '../util/constants';
+
+const { SUPPORTED_CONTEXT_TYPES, SUPPORTED_ATTACHMENT_TYPES } = CONTEXT_PROPS;
 
 const enumTypesMessage = {
 	private: 'dm',
@@ -46,6 +52,24 @@ export class TelegramMessageContext extends MessageContext {
 		this.text = context.message.text;
 
 		this.raw = context;
+	}
+
+	/**
+	 * Returns supported context types
+	 *
+	 * @return {Object}
+	 */
+	get [SUPPORTED_CONTEXT_TYPES] () {
+		return supportedContextTypes;
+	}
+
+	/**
+	 * Returns supported attachment types
+	 *
+	 * @return {Object}
+	 */
+	get [SUPPORTED_ATTACHMENT_TYPES] () {
+		return supportedAttachmentTypes;
 	}
 
 	/**

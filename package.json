@@ -1,6 +1,6 @@
 {
     "name": "@castery/caster-telegram",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "🤖⛓️ The Telegram platform for caster",
     "main": "index.js",
     "engines": {
@@ -37,10 +37,10 @@
         "mocha": "^3.4.2"
     },
     "dependencies": {
-        "@castery/caster": "^0.0.10",
+        "@castery/caster": "^0.0.11",
         "bluebird": "^3.5.0",
         "debug": "^2.6.8",
         "joi": "^10.6.0",
-        "telegraf": "^3.8.0"
+        "telegraf": "^3.9.0"
     }
 }

@@ -2,6 +2,8 @@
 
 import Joi from 'joi';
 
+import { MessageContext } from '@castery/caster';
+
 /**
  * Platform context name
  *
@@ -10,18 +12,24 @@ import Joi from 'joi';
 export const PLATFORM_NAME = 'telegram';
 
 /**
- * Supports attachments
+ * Supported platform types
  *
- * @type {Array}
+ * @type {Object}
  */
-export const supportAttachments = ['image', 'video', 'document', 'button'];
+export const supportedContextTypes = MessageContext.defaultSupportedContextTypes({
+	message: true
+});
 
 /**
- * Media attachments
+ * Supported platform attachments
  *
- * @type {Array}
+ * @type {Object}
  */
-export const mediaAttachments = ['image', 'video', 'document'];
+export const supportedAttachmentTypes = MessageContext.defaultSupportedAttachmentTypes({
+	image: true,
+	video: true,
+	document: true
+});
 
 /**
  * Switches type attachments
