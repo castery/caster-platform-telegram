@@ -102,9 +102,11 @@ export class TelegramPlatform extends Platform {
 	 * @inheritdoc
 	 */
 	async start () {
-		if (this.options.id === null) {
-			const { id } = await this.telegram.getMe();
+		const { id, username } = await this.telegram.getMe();
 
+		this.setOptions({ username });
+
+		if (this.options.id === null) {
 			this.setOptions({ id });
 		}
 
@@ -200,9 +202,19 @@ export class TelegramPlatform extends Platform {
 	 */
 	_addDefaultEvents () {
 		this.telegraf.on('message', (context) => {
+			let $text = context.message.text.replace(`@${this.options.username}`, '');
+
+			if ($text.startsWith('/')) {
+				$text = $text.substring(1);
+			}
+
 			for (const caster of this._casters) {
 				caster.dispatchIncoming(
-					new TelegramMessageContext(caster, context, this.options.id)
+					new TelegramMessageContext(caster, {
+						id: this.options.id,
+						context,
+						$text
+					})
 				);
 			}
 		});

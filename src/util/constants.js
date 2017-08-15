@@ -45,11 +45,17 @@ export const switchAttachments = {
  * Default options platform
  *
  * @type {Object}
+ *
+ * @property {mixed}  [id]       Unique ID platform
+ * @property {Object} [adapter]  Options for adapter
+ * @property {string} [username] Username bot
  */
 export const defaultOptions = {
 	id: null,
 
-	adapter: {}
+	adapter: {},
+
+	username: null
 };
 
 /**
@@ -62,5 +68,7 @@ export const defaultOptions = {
 export const defaultOptionsSchema = Joi.object().keys({
 	id: Joi.number().allow(null),
 
-	adapter: Joi.object()
+	adapter: Joi.object(),
+
+	username: Joi.string().allow(null),
 });

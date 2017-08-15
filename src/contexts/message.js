@@ -27,7 +27,7 @@ export class TelegramMessageContext extends MessageContext {
 	 * @param {Context} context
 	 * @param {number}  id
 	 */
-	constructor (caster, context, id) {
+	constructor (caster, { id, context, $text = null }) {
 		super(caster);
 
 		this.platform = {
@@ -50,6 +50,7 @@ export class TelegramMessageContext extends MessageContext {
 		};
 
 		this.text = context.message.text;
+		this.$text = $text;
 
 		this.raw = context;
 	}
@@ -87,7 +88,10 @@ export class TelegramMessageContext extends MessageContext {
 			options.text = text;
 		}
 
-		const message = new TelegramMessageContext(this.caster, this.raw, this.platform.id);
+		const message = new TelegramMessageContext(this.caster, {
+			id: this.platform.id,
+			context: this.raw
+		});
 
 		message.to = this.from;
 		message.text = options.text;
@@ -95,9 +99,9 @@ export class TelegramMessageContext extends MessageContext {
 		if ('attachments' in options) {
 			if (!Array.isArray(options.attachments)) {
 				options.attachments = [options.attachments];
+			} else {
+				message.attachments = options.attachments;
 			}
-
-			message.attachments = options.attachments;
 		}
 
 		return this.caster.dispatchOutcoming(message);
