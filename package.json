@@ -1,6 +1,6 @@
 {
     "name": "@castery/caster-telegram",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "🤖⛓️ The Telegram platform for caster",
     "main": "index.js",
     "engines": {
@@ -29,18 +29,18 @@
     },
     "homepage": "https://github.com/castery/caster-telegram#readme",
     "devDependencies": {
-        "babel-cli": "^6.24.1",
-        "babel-core": "^6.25.0",
-        "babel-plugin-transform-object-rest-spread": "^6.23.0",
+        "babel-cli": "^6.26.0",
+        "babel-core": "^6.26.0",
+        "babel-plugin-transform-object-rest-spread": "^6.26.0",
         "babel-preset-env": "^1.6.0",
         "chai": "^4.1.1",
         "mocha": "^3.5.0"
     },
     "dependencies": {
-        "@castery/caster": "^0.0.11",
+        "@castery/caster": "^0.0.12",
         "bluebird": "^3.5.0",
-        "debug": "^3.0.0",
+        "debug": "^3.0.1",
         "joi": "^10.6.0",
-        "telegraf": "^3.9.0"
+        "telegraf": "^3.10.1"
     }
 }

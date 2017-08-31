@@ -162,6 +162,12 @@ export class TelegramPlatform extends Platform {
 				await Promise.all(
 					context.attachments.map(({ type, source }) => {
 						if (type === 'image') {
+							if (source.startsWith('http')) {
+								return this.telegram.sendPhoto(chatId, {
+									url: source
+								});
+							}
+
 							return this.telegram.sendPhoto(chatId, source);
 						}
 
@@ -201,7 +207,7 @@ export class TelegramPlatform extends Platform {
 	 * Add default events telegram
 	 */
 	_addDefaultEvents () {
-		this.telegraf.on('message', (context) => {
+		this.telegraf.on('text', (context) => {
 			let $text = context.message.text.replace(`@${this.options.username}`, '');
 
 			if ($text.startsWith('/')) {
