@@ -1,3 +1,5 @@
-'use strict';
+import TelegramPlatform from './platform';
 
-export { TelegramPlatform } from './platform';
+export { TelegramPlatform };
+
+export default TelegramPlatform;

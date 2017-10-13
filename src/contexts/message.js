@@ -1,5 +1,3 @@
-'use strict';
-
 import { MessageContext, CONTEXT_PROPS } from '@castery/caster';
 
 import {
@@ -19,7 +17,7 @@ const enumTypesMessage = {
  *
  * @public
  */
-export class TelegramMessageContext extends MessageContext {
+export default class TelegramMessageContext extends MessageContext {
 	/**
 	 * Constructor
 	 *
@@ -27,7 +25,7 @@ export class TelegramMessageContext extends MessageContext {
 	 * @param {Context} context
 	 * @param {number}  id
 	 */
-	constructor (caster, { id, context, $text = null }) {
+	constructor(caster, { id, context, $text = null }) {
 		super(caster);
 
 		this.platform = {
@@ -60,7 +58,7 @@ export class TelegramMessageContext extends MessageContext {
 	 *
 	 * @return {Object}
 	 */
-	get [SUPPORTED_CONTEXT_TYPES] () {
+	get [SUPPORTED_CONTEXT_TYPES]() {
 		return supportedContextTypes;
 	}
 
@@ -69,7 +67,7 @@ export class TelegramMessageContext extends MessageContext {
 	 *
 	 * @return {Object}
 	 */
-	get [SUPPORTED_ATTACHMENT_TYPES] () {
+	get [SUPPORTED_ATTACHMENT_TYPES]() {
 		return supportedAttachmentTypes;
 	}
 
@@ -81,7 +79,7 @@ export class TelegramMessageContext extends MessageContext {
 	 *
 	 * @return {Promise<mixed>}
 	 */
-	send (text, options = {}) {
+	send(text, options = {}) {
 		if (typeof text === 'object') {
 			options = text;
 		} else {
@@ -115,7 +113,7 @@ export class TelegramMessageContext extends MessageContext {
 	 *
 	 * @return {Promise<mixed>}
 	 */
-	reply (text, options = {}) {
+	reply(text, options = {}) {
 		if (typeof text === 'object') {
 			options = text;
 		} else {

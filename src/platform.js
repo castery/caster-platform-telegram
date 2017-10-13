@@ -1,10 +1,12 @@
-'use strict';
-
 import createDebug from 'debug';
 import Telegraf, { Markup } from 'telegraf';
-import { Platform, errors as casterErrors } from '@castery/caster';
+import {
+	Platform,
+	UnsupportedContextType,
+	UnsupportedAttachmentType
+} from '@castery/caster';
 
-import { TelegramMessageContext } from './contexts/message';
+import TelegramMessageContext from './contexts/message';
 
 import {
 	PLATFORM_NAME,
@@ -15,37 +17,35 @@ import {
 	supportedAttachmentTypes
 } from './util/constants';
 
-const { UnsupportedAttachmentType, UnsupportedContextType } = casterErrors;
-
 const debug = createDebug('caster-telegram');
 
-export class TelegramPlatform extends Platform {
+export default class TelegramPlatform extends Platform {
 	/**
 	 * Constructor
 	 *
 	 * @param {Object} options
 	 */
-	constructor (options = {}) {
+	constructor(options = {}) {
 		super();
 
 		Object.assign(this.options, defaultOptions);
 
-		this.telegraf = new Telegraf;
+		this.telegraf = new Telegraf();
 		this.telegram = this.telegraf.telegram;
 
-		this._casters = new Set;
+		this.casters = new Set();
 
 		if (Object.keys(options).length > 0) {
 			this.setOptions(options);
 		}
 
-		this._addDefaultEvents();
+		this.addDefaultEvents();
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	setOptions (options) {
+	setOptions(options) {
 		super.setOptions(options);
 
 		if ('adapter' in options) {
@@ -69,14 +69,14 @@ export class TelegramPlatform extends Platform {
 	/**
 	 * @inheritdoc
 	 */
-	getOptionsSchema () {
+	getOptionsSchema() {
 		return defaultOptionsSchema;
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	getAdapter () {
+	getAdapter() {
 		return this.telegram;
 	}
 
@@ -85,7 +85,7 @@ export class TelegramPlatform extends Platform {
 	 *
 	 * @return {string}
 	 */
-	getId () {
+	getId() {
 		return this.options.id;
 	}
 
@@ -94,14 +94,14 @@ export class TelegramPlatform extends Platform {
 	 *
 	 * @return {string}
 	 */
-	getPlatformName () {
+	getPlatformName() {
 		return PLATFORM_NAME;
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	async start () {
+	async start() {
 		const { id, username } = await this.telegram.getMe();
 
 		this.setOptions({ username });
@@ -116,15 +116,15 @@ export class TelegramPlatform extends Platform {
 	/**
 	 * @inheritdoc
 	 */
-	async stop () {
+	async stop() {
 		await this.telegraf.stop();
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	async subscribe (caster) {
-		this._casters.add(caster);
+	async subscribe(caster) {
+		this.casters.add(caster);
 
 		if (!this.isStarted()) {
 			await this.start();
@@ -159,31 +159,30 @@ export class TelegramPlatform extends Platform {
 					}
 				}
 
-				await Promise.all(
-					context.attachments.map(({ type, source }) => {
-						if (type === 'image') {
-							if (source.startsWith('http')) {
-								return this.telegram.sendPhoto(chatId, {
-									url: source
-								});
-							}
-
-							return this.telegram.sendPhoto(chatId, source);
+				// eslint-disable-next-line array-callback-return, consistent-return
+				await Promise.all(context.attachments.map(({ type, source }) => {
+					if (type === 'image') {
+						if (source.startsWith('http')) {
+							return this.telegram.sendPhoto(chatId, {
+								url: source
+							});
 						}
 
-						if (type === 'video') {
-							return this.telegram.sendVideo(chatId, source);
-						}
+						return this.telegram.sendPhoto(chatId, source);
+					}
 
-						if (type === 'audio') {
-							return this.telegram.sendAudio(chatId, source);
-						}
+					if (type === 'video') {
+						return this.telegram.sendVideo(chatId, source);
+					}
 
-						if (type === 'document') {
-							return this.telegram.sendDocument(chatId, source);
-						}
-					})
-				);
+					if (type === 'audio') {
+						return this.telegram.sendAudio(chatId, source);
+					}
+
+					if (type === 'document') {
+						return this.telegram.sendDocument(chatId, source);
+					}
+				}));
 			}
 
 			return await this.telegram.callApi('sendMessage', message);
@@ -193,12 +192,12 @@ export class TelegramPlatform extends Platform {
 	/**
 	 * @inheritdoc
 	 */
-	async unsubscribe (caster) {
-		this._casters.delete(caster);
+	async unsubscribe(caster) {
+		this.casters.delete(caster);
 
 		caster.outcoming.removePlatform(this);
 
-		if (this._casters.size === 0 && this.isStarted()) {
+		if (this.casters.size === 0 && this.isStarted()) {
 			await this.stop();
 		}
 	}
@@ -206,7 +205,7 @@ export class TelegramPlatform extends Platform {
 	/**
 	 * Add default events telegram
 	 */
-	_addDefaultEvents () {
+	addDefaultEvents() {
 		this.telegraf.on('text', (context) => {
 			let $text = context.message.text.replace(`@${this.options.username}`, '');
 
@@ -214,14 +213,12 @@ export class TelegramPlatform extends Platform {
 				$text = $text.substring(1);
 			}
 
-			for (const caster of this._casters) {
-				caster.dispatchIncoming(
-					new TelegramMessageContext(caster, {
-						id: this.options.id,
-						context,
-						$text
-					})
-				);
+			for (const caster of this.casters) {
+				caster.dispatchIncoming(new TelegramMessageContext(caster, {
+					id: this.options.id,
+					context,
+					$text
+				}));
 			}
 		});
 	}
