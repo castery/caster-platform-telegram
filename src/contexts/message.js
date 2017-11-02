@@ -13,7 +13,7 @@ const enumTypesMessage = {
 };
 
 /**
- * Incoming vk context
+ * Incoming telegram context
  *
  * @public
  */
