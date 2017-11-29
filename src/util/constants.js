@@ -25,6 +25,7 @@ export const supportedContextTypes = MessageContext.defaultSupportedContextTypes
  */
 export const supportedAttachmentTypes = MessageContext.defaultSupportedAttachmentTypes({
 	image: true,
+	voice: true,
 	video: true,
 	document: true
 });

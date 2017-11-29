@@ -2,9 +2,11 @@ import createDebug from 'debug';
 import Telegraf, { Markup } from 'telegraf';
 import {
 	Platform,
-	UnsupportedContextType,
-	UnsupportedAttachmentType
+	UnsupportedContextTypeError,
+	UnsupportedAttachmentTypeError
 } from '@castery/caster';
+
+import { createReadStream } from 'fs';
 
 import TelegramMessageContext from './contexts/message';
 
@@ -51,8 +53,7 @@ export default class TelegramPlatform extends Platform {
 		if ('adapter' in options) {
 			const { adapter } = this.options;
 
-			const optionsAdapter = Object.assign({}, adapter);
-			delete optionsAdapter.token;
+			const { token, ...optionsAdapter } = { ...adapter };
 
 			Object.assign(this.telegraf.options, optionsAdapter);
 
@@ -140,7 +141,7 @@ export default class TelegramPlatform extends Platform {
 			}
 
 			if (supportedContextTypes[context.type] !== true) {
-				throw new UnsupportedContextType({
+				throw new UnsupportedContextTypeError({
 					type: context.type
 				});
 			}
@@ -155,32 +156,36 @@ export default class TelegramPlatform extends Platform {
 			if ('attachments' in context) {
 				for (const { type } of context.attachments) {
 					if (supportedAttachmentTypes[type] !== true) {
-						throw new UnsupportedAttachmentType({ type });
+						throw new UnsupportedAttachmentTypeError({ type });
 					}
 				}
 
 				// eslint-disable-next-line array-callback-return, consistent-return
 				await Promise.all(context.attachments.map(({ type, source }) => {
 					if (type === 'image') {
-						if (source.startsWith('http')) {
+						if (typeof source === 'string' && source.startsWith('http')) {
 							return this.telegram.sendPhoto(chatId, {
 								url: source
 							});
 						}
 
-						return this.telegram.sendPhoto(chatId, source);
+						return this.telegram.sendPhoto(chatId, { source });
+					}
+
+					if (type === 'voice') {
+						return this.telegram.sendVoice(chatId, { source });
 					}
 
 					if (type === 'video') {
-						return this.telegram.sendVideo(chatId, source);
+						return this.telegram.sendVideo(chatId, { source });
 					}
 
 					if (type === 'audio') {
-						return this.telegram.sendAudio(chatId, source);
+						return this.telegram.sendAudio(chatId, { source });
 					}
 
 					if (type === 'document') {
-						return this.telegram.sendDocument(chatId, source);
+						return this.telegram.sendDocument(chatId, { source });
 					}
 				}));
 			}
@@ -206,11 +211,15 @@ export default class TelegramPlatform extends Platform {
 	 * Add default events telegram
 	 */
 	addDefaultEvents() {
-		this.telegraf.on('text', (context) => {
-			let $text = context.message.text.replace(`@${this.options.username}`, '');
+		this.telegraf.on('message', (context) => {
+			let $text = context.message.text;
 
-			if ($text.startsWith('/')) {
-				$text = $text.substring(1);
+			if ($text) {
+				$text = $text.replace(`@${this.options.username}`, '');
+
+				if ($text.startsWith('/')) {
+					$text = $text.substring(1);
+				}
 			}
 
 			for (const caster of this.casters) {
